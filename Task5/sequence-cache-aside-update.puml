@@ -1,0 +1,33 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+title Cache-Aside Update Sequence Diagram
+
+autonumber
+
+participant "Приложение\nКлиент" as client
+participant "Сервисный\nAPI" as api
+database "Кеш\n" as cache
+database "База\nДанных" as db
+
+client -> api: запрос\n изменения статуса
+activate api
+
+api -> db: update статуса\n с возвратом предыдущего статуса
+activate db
+db -->> api: Предыдущий статус из БД
+deactivate db
+
+api -> api: Формирование\n ключей для инвалидации\n на основании двух статусов
+
+loop Для каждого ключа
+
+    api -> cache: Удаление\n ключа в кеше
+    activate cache
+    cache -->> api: Успешное удаление
+    deactivate cache
+end
+
+api ->> client: Возврат ответа
+
+deactivate api
+@enduml
