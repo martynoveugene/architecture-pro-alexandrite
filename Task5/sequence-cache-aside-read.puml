@@ -1,0 +1,40 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+title Cache-Aside Read Sequence Diagram
+
+autonumber
+
+participant "Приложение\nКлиент" as client
+participant "Сервисный\nAPI" as api
+database "Кеш\n" as cache
+database "База\nДанных" as db
+
+client -> api: запрос\n чтения
+activate api
+
+api -> api: Формирование\n ключа
+api -> cache: запрос в кеше\n по ключу
+
+activate cache
+cache -->> api: Ответ кеша
+deactivate cache
+
+alt Кеш-попадание (есть данные)
+
+    api ->> client: Возврат ответа (из кеша)
+
+else Кеш-промах (нет данных)
+
+    api -> db: SQL-запрос
+    activate db
+    db -->> api: Результат из БД
+    deactivate db
+
+    api -> cache: Запись данных\n в кеш
+
+    api ->> client: Возврат ответа (из БД)
+
+end
+
+deactivate api
+@enduml
